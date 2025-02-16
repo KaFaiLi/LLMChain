@@ -1,0 +1,141 @@
+1. Introduction (0:00 - 0:23)
+
+Hello everyone and welcome back to the Power BI co-create video series. My name is Christian, and in these videos, I'll be guiding you through an introduction to the world of Power BI Desktop. As this is a co-creator video, it's highly recommended to have two screens set up. Use one screen to watch this tutorial and the other to simultaneously work in Power BI Desktop. This setup will make it much easier to follow along and practice the steps as we go.
+
+2. Task explanation (0:24 - 0:40)
+
+Today, we're going to be working with a financial dataset, let's call it the "Risk Metrics Dataset." This dataset contains various risk indicators and performance metrics for a hypothetical trading portfolio. Our task today is to build a dashboard that allows us to monitor and analyze these risk metrics over time. This is crucial for understanding the portfolio's risk profile and performance, allowing for informed decision-making. We will explore trends, relationships between different metrics, and gain insights into the portfolio's behavior.
+
+3. Power BI Desktop Overview (0:41 - 2:27)
+
+Before diving into our analysis, let's take a quick tour of Power BI Desktop, especially if you're new to the interface. When you first launch Power BI Desktop, you'll see this starting screen. You'll notice a sign-in area in the center, but for now, you don't need to sign in. We can explore Power BI's features without signing in initially.
+
+On the right side, you'll see a few helpful links. "What's new?" highlights recent updates to Power BI. The "Power BI Blog," "Forums," and "Tutorials" links are excellent resources. The tutorials can provide further guidance on specific features, while the forums are invaluable for troubleshooting. Many common Power BI issues have likely been encountered and solved by others, so the forums are a great place to search for solutions if you get stuck.
+
+On the left, you have "Get Data," "Recent Sources," and "Open Other Reports." For today, we'll focus on the "Get Data" button. Click on "Get Data" to open the data source selection window. Here, you can see the wide range of data sources Power BI can connect to. From common file types like Excel and CSV to databases like SQL Server, cloud services, and more – Power BI is very versatile.
+
+For this tutorial, we’ll assume our "Risk Metrics Dataset" is in an Excel file. So, select "Excel workbook" and click "Connect." A standard Windows file dialog will appear. Navigate to where you've saved your "Risk Metrics Dataset" Excel file, select it, and click "Open." Power BI will then establish a connection and open the Navigator window.
+
+The Navigator window displays the contents of your Excel file, showing any sheets or tables within it. Select the sheet containing your risk metrics data. You should see a preview of your data on the right. Take a moment to glance at the preview and ensure the data looks correct.
+
+If the preview looks good, you might be tempted to click "Load" right away. However, it’s often best practice to click "Transform Data." This will open the Power Query Editor within Power BI. Power Query is a powerful data transformation tool, and it allows us to inspect and clean our data before loading it into Power BI for visualization.
+
+In the Power Query Editor, you get a detailed view of your data in a tabular format. Pay close attention to the column headers and the icons next to them. These icons indicate the data type Power Query has automatically detected for each column. For example, you might see "123" for whole numbers, "1.2" for decimal numbers, and "ABC" for text.
+
+Let's look at our columns. "value_date" should ideally be recognized as a Date type. Columns like "FtQ," "IRSTJPY," "IRSTUSD," "IRSensi," "STTHH," "SVaR," "VaR," and "pnl_FICASIRATFLO_dtd" should generally be decimal numbers as they represent financial metrics.
+
+If you notice any incorrect data types, you can easily change them. For instance, if "value_date" isn't recognized as a date, click on the data type icon next to the column name. A dropdown menu will appear, allowing you to select the correct data type, such as "Date."
+
+Similarly, for the numerical columns, ensure they are set to "Decimal Number." Be mindful of decimal separators, especially if your regional settings use commas instead of dots. If you encounter issues with decimal separators, you can use the "Using Locale..." option, just as we discussed in previous tutorials, to specify the correct locale for your data. However, in most cases, Power BI handles this automatically quite well.
+
+Once you've reviewed and adjusted the data types as needed, and you're satisfied that the data in Power Query looks clean and correctly formatted, you can proceed to load it into Power BI for visualization.
+
+4. Loading and Initial UI Exploration (2:28 - 3:28)
+
+Now that we've reviewed our data in Power Query, click "Close & Apply" in the top left corner of the Power Query Editor. Power BI will then apply any transformations and load the data into the Power BI Desktop data model. You'll see a "Loading data..." message while this process completes.
+
+Once loaded, you'll see the name of your dataset, likely the name of your Excel file or sheet, in the "Fields" pane on the right-hand side. Expand your dataset to see all the columns we just reviewed in Power Query: "value_date," "FtQ," "IRSTJPY," and so on. These are now ready to be used in our visualizations.
+
+Next to the "Fields" pane is the "Visualizations" pane. Here, you'll find a library of different chart types and visuals you can use to represent your data. We'll explore some of these shortly. Below the "Visualizations" pane, you'll find the "Filters" pane, which allows you to add filters to your report pages, individual visuals, or across all pages. We'll touch on filters later as well.
+
+At the top of the Power BI Desktop window, you'll see the familiar ribbon interface, common to Microsoft Office applications. The "Home," "Insert," "Modeling," "View," and "Help" tabs each contain a set of related commands and options. For example, the "Home" tab has common data and report operations, "View" allows you to customize the Power BI interface, and so on.
+
+At the bottom, you’ll see the "Pages" pane. By default, you start with "Page 1." You can add more pages to your report by clicking the "+" button, delete pages by clicking the "X" on a page tab, and rename or duplicate pages by right-clicking on a page tab. For this tutorial, we'll primarily work on a single page to create our risk monitoring dashboard.
+
+5. Creating the First Visualization (Line Chart) (3:29 - 5:24)
+
+Let's start by visualizing the Value at Risk (VaR) and Stressed Value at Risk (SVaR) over time. This is a common way to monitor portfolio risk. In the "Fields" pane, click on the checkbox next to "value_date." Power BI might automatically create a table visual, which is a good starting point. Now, also check the boxes next to "VaR" and "SVaR." Power BI will likely add these as columns to your table.
+
+While a table is useful for seeing the raw data, a line chart is much better for visualizing trends over time. With your table visual selected, go to the "Visualizations" pane and click on the "Line chart" icon (it looks like a line graph). Power BI will transform your table into a line chart.
+
+You should now see a line chart with "value_date" on the x-axis and lines representing "Sum of VaR" and "Sum of SVaR" on the y-axis. Currently, Power BI is summing the VaR and SVaR values across all dates, which isn't what we want. We want to see the VaR and SVaR for each date.
+
+To fix this, in the "Visualizations" pane, look at the "Values" section. You'll see "Sum of VaR" and "Sum of SVaR." Click on the dropdown arrow next to "Sum of VaR" and change the aggregation from "Sum" to "Average" (or "Minimum" or "Maximum" or "Last" depending on what makes most sense for your data and analysis. For a general trend view, average might be suitable). Do the same for "Sum of SVaR," changing it to "Average" (or your chosen aggregation).
+
+Now your line chart should display the average VaR and SVaR for each "value_date," showing how these risk metrics evolve over time. Resize the visual by dragging the handles on its corners to make it larger and easier to see on your canvas. You can also move it around by dragging it by its border.
+
+6. Formatting the Line Chart Visualization (5:25 - 7:30)
+
+Let's format our line chart to make it clearer and more informative. With the line chart selected, go to the "Visualizations" pane and click on the "Format" tab (it looks like a paintbrush).
+
+Here, you have numerous formatting options. You can adjust the "Legend" – turn it on/off, change its position (top, bottom, right, left). For line charts, a top or right legend is usually good. You can modify "Data colors" to change the colors of the VaR and SVaR lines. While Power BI's default colors are generally well-chosen, you might want to customize them for consistency or emphasis.
+
+Under "X-axis" and "Y-axis," you can format the axis titles, labels, and gridlines. For the Y-axis, you might want to ensure it starts at zero to give a proper perspective. You can adjust the "Start" value under the Y-axis formatting options.
+
+The "Title" section allows you to customize the chart title. Power BI often creates an automatic title based on the fields used, which might be something like "Average of VaR and Average of SVaR by value_date." You can edit this to be more concise and descriptive, for example, "Portfolio VaR and SVaR Over Time."
+
+Explore other formatting options like "Background," "Borders," and "General" settings to further customize the appearance of your line chart to your liking. Remember to keep visualizations clean and easy to understand. Avoid excessive formatting that might distract from the data itself.
+
+7. Creating the Second Visualization (Scatter Plot) (7:31 - 10:39)
+
+Next, let's investigate the relationship between VaR and SVaR. A scatter plot is perfect for visualizing correlations between two numerical variables. Click on the blank canvas area to deselect your line chart. Then, in the "Visualizations" pane, click on the "Scatter chart" icon. This creates an empty scatter plot visual.
+
+Now, drag "VaR" from the "Fields" pane to the "X-axis" field well in the "Visualizations" pane, and drag "SVaR" to the "Y-axis" field well. Power BI will populate the scatter plot with points. Each point represents a data point from your dataset.
+
+Currently, it might look like just one point or a few points clustered together. This is likely because Power BI is aggregating the data. We want to see individual data points for each "value_date." To achieve this, drag "value_date" from the "Fields" pane to the "Details" field well in the "Visualizations" pane (or you could try "Legend" as well, depending on how you want to represent the date).
+
+Now, your scatter plot should show individual points for each "value_date," with VaR on the x-axis and SVaR on the y-axis. You can hover over each point to see the "value_date," VaR, and SVaR values for that point.
+
+If you want to zoom in to examine a particular area of the scatter plot in more detail, you can use "Focus mode." Select the scatter plot, and then click the "Focus mode" icon in the top right corner of the visual (it looks like a small rectangle expanding). This will enlarge the scatter plot to fill the entire canvas, allowing for closer inspection. Click "Back to report" in the top left corner to return to the main report view.
+
+8. Multiple Ways to Create Visualizations (10:40 - 12:32)
+
+Just like with the previous tutorial, let me show you a couple of alternative ways to create visualizations. Let's delete the scatter plot we just created. Click on it and press the "Delete" key or right-click and select "Remove."
+
+Another way to create a scatter plot is to first select the variables you want to visualize. In the "Fields" pane, click on "VaR" and "SVaR" (Ctrl+click to select both). Then, go to the "Visualizations" pane and click on the "Scatter chart" icon. Power BI will automatically create a scatter plot using the selected fields, placing "VaR" on the x-axis and "SVaR" on the y-axis. You would then still need to drag "value_date" to the "Details" field to get individual data points.
+
+Yet another method is to start with a blank visualization. Click on the "Scatter chart" icon in the "Visualizations" pane to create an empty scatter plot. Then, in the "Visualizations" pane, you'll see empty field wells: "X-axis," "Y-axis," "Legend," "Details," etc. You can then drag and drop the fields from the "Fields" pane into these wells. Drag "VaR" to "X-axis," "SVaR" to "Y-axis," and "value_date" to "Details." This approach gives you more control from the start.
+
+These are just a few different ways to initiate visualization creation in Power BI, allowing you to choose the method that best suits your workflow.
+
+9. Adding a KPI Card (12:33 - 14:37)
+
+Let's add a Key Performance Indicator (KPI) card to our dashboard. A card visual is great for highlighting a single, important value. Click on the blank canvas to deselect any visuals. Then, in the "Visualizations" pane, click on the "Card" icon (it looks like a rectangle with a single number).
+
+This creates a blank card visual. Now, drag "pnl_FICASIRATFLO_dtd" from the "Fields" pane to the "Fields" well in the "Visualizations" pane. By default, Power BI might display the "Sum of pnl_FICASIRATFLO_dtd." Again, summing might not be the most meaningful aggregation.
+
+Click the dropdown arrow next to "Sum of pnl_FICASIRATFLO_dtd" and consider changing the aggregation. For a KPI card showing overall daily P&L performance, perhaps "Average" or "Median" daily P&L would be more informative than the sum. Choose the aggregation that best represents the KPI you want to highlight. Let's say we choose "Average."
+
+Your card visual will now display the average daily P&L. Format the card using the "Format" pane to adjust the display units, decimal places, label, and appearance to make it stand out as a key performance indicator. You could add a title like "Average Daily P&L" in the "General" formatting section.
+
+10. Exploring IRSensi with a Column Chart (14:38 - 16:16)
+
+Let's visualize the "IRSensi" (Interest Rate Sensitivity) metric. A column chart can be useful for comparing values across categories or over time. Click on the blank canvas and select the "Clustered column chart" icon from the "Visualizations" pane.
+
+Drag "value_date" to the "Axis" field well and "IRSensi" to the "Value" field well. Again, Power BI might default to summing "IRSensi." Change the aggregation to "Average" (or another appropriate measure like "Median," "Minimum," "Maximum," depending on your analysis goal) by clicking the dropdown arrow next to "Sum of IRSensi" in the "Visualizations" pane.
+
+You should now see a column chart showing the average IRSensi for each "value_date." This allows you to see how the portfolio's interest rate sensitivity changes over time. Format the column chart to improve its readability, adjust colors, add data labels if desired, and customize the axis titles and chart title in the "Format" pane.
+
+11. Putting it all Together and Interactivity (16:17 - 18:58)
+
+Now we have four visualizations: a line chart of VaR and SVaR over time, a scatter plot of VaR vs. SVaR, a card showing average daily P&L, and a column chart of IRSensi over time. Arrange these visuals on your report page in a logical and visually appealing layout. You can resize and reposition them by dragging and dropping.
+
+One of the powerful features of Power BI is interactivity. Try clicking on a specific column in the IRSensi column chart. Notice how the other visualizations – the line chart and scatter plot – automatically filter or highlight to show the data corresponding to the selected "value_date" in the column chart.
+
+Similarly, if you click on a data point in the scatter plot or a point on the VaR/SVaR line chart, the other visuals will also respond, highlighting or filtering data related to that selected date. This cross-filtering and cross-highlighting is a core strength of Power BI, allowing you to explore your data from different perspectives and uncover relationships and insights.
+
+Experiment with clicking on different parts of your visualizations and observe how the other visuals react. This interactive exploration is key to data discovery and understanding within Power BI.
+
+12. Adjusting Visualization Legends and Final Touches (18:59 - 19:30)
+
+For visual consistency, you might want to adjust the legend positions. For example, for the line chart and column chart, you can move the legends to the right side using the "Format" pane, under the "Legend" settings. This can create a cleaner look, especially when you have multiple visualizations on a page.
+
+Review all your visualizations and make any final formatting adjustments to ensure they are clear, concise, and effectively communicate the risk metrics data. Check titles, axis labels, data colors, and overall layout for visual appeal and clarity.
+
+13. Your Task: Visualize FtQ (19:31 - 20:01)
+
+For your final task in this video, I want you to create one more visualization. Visualize the "FtQ" (Future to Quarter) metric. Think about what type of chart would be most appropriate to show this data. Perhaps a column chart showing average FtQ over time, or maybe a distribution visualization like a histogram if you want to see the distribution of FtQ values. Experiment and create a visualization for "FtQ" that you think effectively communicates this metric. Pause the video now and take some time to create this visualization.
+
+(Pause for user to complete task)
+
+14. Organizing Visualizations on the Page (20:02 - 20:30)
+
+Welcome back! I hope you were successful in creating a visualization for "FtQ." Now, as a final step, let’s organize our visualizations on the page. Go to the "View" tab in the ribbon. You can turn on "Gridlines" to help you align your visuals neatly. You can also enable "Snap objects to grid" to make it easier to align visuals precisely to the gridlines.
+
+Select multiple visualizations by clicking and dragging a selection box around them, or by Ctrl+clicking individual visuals. Once you have selected multiple visuals, go to the "Format" tab in the ribbon. In the "Align" group, you have options to align visuals to the left, center, right, top, middle, or bottom. Use these alignment options to arrange your visualizations neatly on the page, creating a well-organized and professional-looking risk monitoring dashboard.
+
+15. Outro (20:31 - 20:35)
+
+That concludes this Power BI tutorial video. I hope you have gained a good understanding of how to load financial data, create various visualizations like line charts, scatter plots, cards, and column charts, format them effectively, and leverage Power BI's interactivity for data exploration. Thank you for watching, and I look forward to seeing you in the next Power BI video!
+
+This transcript is adapted for financial data and the provided dataset columns. Remember to adjust the specific visualization choices and interpretations based on the actual data and the story you want to tell with it. Let me know if you'd like any further refinements or adjustments!
