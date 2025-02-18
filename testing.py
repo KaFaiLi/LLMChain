@@ -9,11 +9,17 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_groq import ChatGroq
 from langchain.schema import HumanMessage, AIMessage
 from dotenv import load_dotenv
-from llm_config import get_llm
 
 # Load environment variables
 load_dotenv()
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
+# Initialize LLM
+llm = ChatGroq(
+    model_name="llama-3.3-70b-versatile",
+    temperature=0.7,
+    groq_api_key=GROQ_API_KEY
+)
 
 # ---------------------------
 # 1. Define the Structured Model
@@ -50,11 +56,6 @@ movie_review_prompt = PromptTemplate(
     template=(
         "You are a movie review analyzer. Your task is to extract specific information "
         "from the given review and format it as a JSON object.\n\n"
-        "Example Reviews:\n"
-        "Review: I watched The Dark Knight yesterday. It's an intense superhero movie with amazing performances.\n"
-        "Expected Output: {{'movie_title': 'The Dark Knight', 'genre': 'Superhero/Action', 'rating': 9.5, 'recommendation': 'yes'}}\n\n"
-        "Review: Watched Gigli last night. It's a romantic comedy that fails on both counts.\n"
-        "Expected Output: {{'movie_title': 'Gigli', 'genre': 'Romantic Comedy', 'rating': 2.0, 'recommendation': 'no'}}\n\n"
         "{format_instructions}\n"
         "Review: {review}\n"
     )
@@ -66,7 +67,7 @@ movie_review_prompt = PromptTemplate(
 movie_review_chain = (
     {"review": RunnablePassthrough()} 
     | movie_review_prompt 
-    | get_llm() 
+    | llm
     | movie_review_parser
 )
 
