@@ -4,14 +4,16 @@ import fitz  # PyMuPDF for PDF processing
 import cv2
 import pytesseract
 import re
+import numpy as np
 
 # Uncomment and modify this if Tesseract is not in your system's PATH:
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-def pdf_to_images(pdf_path, output_folder):
+def pdf_to_images(pdf_path, output_folder, dpi=300):
     """
-    Converts a multi-page PDF to images and saves them.
+    Converts a multi-page PDF to images at high DPI and saves them.
     Returns a list of saved image file paths.
+    Increased DPI for better quality starting point.
     """
     print(f"Debug: Starting pdf_to_images with pdf_path: {pdf_path}, output_folder: {output_folder}") # Debug print
     doc = fitz.open(pdf_path)
@@ -21,35 +23,104 @@ def pdf_to_images(pdf_path, output_folder):
 
     for i, page in enumerate(doc):
         print(f"Debug: Processing page {i+1} of PDF '{pdf_path}'") # Debug print
-        pix = page.get_pixmap()
+        zoom = dpi / 72  # Calculate zoom factor based on DPI (72 is the default DPI)
+        matrix = fitz.Matrix(zoom, zoom)  # Create transformation matrix for higher resolution
+        pix = page.get_pixmap(matrix=matrix)  # Use the matrix for higher resolution
         img_path = os.path.join(output_folder, f"{pdf_name}_page_{i+1}.png")
-        print(f"Debug: Saving page {i+1} as image to: {img_path}") # Debug print
-        pix.save(img_path)  # Save image
+        print(f"Debug: Saving page {i+1} as high-res image to: {img_path}") # Debug print
+        pix.save(img_path)  # Save high-resolution image
         images.append(img_path)
     print(f"Debug: Finished converting PDF '{pdf_path}' to images. Total images saved: {len(images)}") # Debug print
     return images
 
-def preprocess_image(image_path):
+def preprocess_image(image_path, save_debug=True):
     """
-    Enhances an image for better OCR accuracy.
+    Advanced image enhancement for better OCR accuracy:
+    - Upscales image
     - Converts to grayscale
+    - Applies CLAHE for adaptive contrast enhancement
     - Denoises the image
     - Applies adaptive thresholding
+    - Optional morphological operations
     """
-    print(f"Debug: Starting preprocess_image with image_path: {image_path}") # Debug print
+    print(f"Debug: Starting enhanced preprocess_image with image_path: {image_path}") # Debug print
     image = cv2.imread(image_path)
     if image is None:
         print(f"Error: Could not read {image_path}")
         return None
-
+    
+    debug_folder = os.path.join(os.path.dirname(image_path), "debug_preprocessing")
+    if save_debug:
+        os.makedirs(debug_folder, exist_ok=True)
+        base_name = os.path.basename(image_path).split('.')[0]
+    
+    # 1. Upscale the image (if needed) - using bicubic interpolation
+    height, width = image.shape[:2]
+    if max(height, width) < 2000:  # Only upscale if image is small
+        scale_factor = 2
+        image = cv2.resize(image, (width * scale_factor, height * scale_factor), 
+                          interpolation=cv2.INTER_CUBIC)
+        print(f"Debug: Image upscaled from {width}x{height} to {width*scale_factor}x{height*scale_factor}")
+    
+    if save_debug:
+        cv2.imwrite(os.path.join(debug_folder, f"{base_name}_1_upscaled.png"), image)
+    
+    # 2. Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    print(f"Debug: Image converted to grayscale") # Debug print
-    gray = cv2.bilateralFilter(gray, 9, 75, 75)  # Denoising
-    print(f"Debug: Image denoised using bilateral filter") # Debug print
-    processed = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                      cv2.THRESH_BINARY, 11, 2)  # Improve contrast
-    print(f"Debug: Image processed with adaptive thresholding") # Debug print
-    print(f"Debug: Finished preprocess_image for {image_path}") # Debug print
+    print(f"Debug: Image converted to grayscale")
+    
+    if save_debug:
+        cv2.imwrite(os.path.join(debug_folder, f"{base_name}_2_gray.png"), gray)
+    
+    # 3. Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) for better contrast
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray_clahe = clahe.apply(gray)
+    print(f"Debug: Applied CLAHE for contrast enhancement")
+    
+    if save_debug:
+        cv2.imwrite(os.path.join(debug_folder, f"{base_name}_3_clahe.png"), gray_clahe)
+    
+    # 4. Apply bilateral filter to reduce noise while preserving edges
+    denoised = cv2.bilateralFilter(gray_clahe, 11, 17, 17)
+    print(f"Debug: Applied bilateral filter for noise reduction")
+    
+    if save_debug:
+        cv2.imwrite(os.path.join(debug_folder, f"{base_name}_4_denoised.png"), denoised)
+    
+    # 5. Apply adaptive thresholding with optimized parameters
+    # Try different block sizes and constant values for best results
+    block_size = 15  # Must be odd
+    constant = 8     # Typically between 2 and 10
+    binary = cv2.adaptiveThreshold(
+        denoised,
+        255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY,
+        block_size,
+        constant
+    )
+    print(f"Debug: Applied adaptive thresholding with block size {block_size} and constant {constant}")
+    
+    if save_debug:
+        cv2.imwrite(os.path.join(debug_folder, f"{base_name}_5_thresholded.png"), binary)
+    
+    # 6. Optional: Apply morphological operations to enhance text
+    # This can help with connecting broken characters or removing noise
+    kernel = np.ones((1, 1), np.uint8)
+    processed = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+    print(f"Debug: Applied morphological closing to enhance text")
+    
+    if save_debug:
+        cv2.imwrite(os.path.join(debug_folder, f"{base_name}_6_morphology.png"), processed)
+        print(f"Debug: Saved preprocessing debug images to {debug_folder}")
+    
+    # Save the final preprocessed image next to the original
+    preprocessed_path = image_path.replace('.png', '_preprocessed.png')
+    cv2.imwrite(preprocessed_path, processed)
+    print(f"Debug: Saved final preprocessed image to {preprocessed_path}")
+    
+    print(f"Debug: Finished enhanced preprocess_image for {image_path}")
+    
     return processed
 
 def extract_transaction_info(text):
@@ -83,8 +154,8 @@ def extract_transaction_info(text):
 def process_documents(input_folder, image_output_folder, output_csv):
     """
     Processes all PDFs in the input folder:
-    - Converts PDFs to images
-    - Enhances images using OpenCV
+    - Converts PDFs to high-res images
+    - Enhances images using advanced OpenCV techniques
     - Extracts text using OCR (Tesseract)
     - Parses transaction details using regex
     - Saves results to a CSV file
@@ -95,53 +166,55 @@ def process_documents(input_folder, image_output_folder, output_csv):
 
     with open(output_csv, mode="w", newline="", encoding="utf-8") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(["Original File", "Page Image", "Sender", "Receiver", "Amount", "Transaction Date", "Raw OCR Output"])
+        writer.writerow(["Original File", "Page Image", "Preprocessed Image", "Sender", "Receiver", "Amount", "Transaction Date", "Raw OCR Output", "OCR Engine"])
         print(f"Debug: CSV file '{output_csv}' opened for writing.") # Debug print
 
         for filename in os.listdir(input_folder):
             if filename.lower().endswith(".pdf"):
                 pdf_path = os.path.join(input_folder, filename)
-                print(f"Processing PDF file: {filename}") # Keep original print for user info
+                print(f"Processing PDF file: {filename} using Tesseract with enhanced preprocessing...") # User friendly print
                 print(f"Debug: Full PDF path: {pdf_path}") # Debug print
 
-                # Convert PDF to images
-                image_paths = pdf_to_images(pdf_path, image_output_folder)
-                print(f"Debug: Number of images generated from PDF '{filename}': {len(image_paths)}") # Debug print
+                # Convert PDF to high-resolution images
+                image_paths = pdf_to_images(pdf_path, image_output_folder, dpi=300)
+                print(f"Debug: Number of high-res images generated from PDF '{filename}': {len(image_paths)}") # Debug print
 
                 for img_path in image_paths:
                     print(f"Debug: Processing image: {img_path}") # Debug print
-                    processed_img = preprocess_image(img_path)
+                    processed_img = preprocess_image(img_path, save_debug=True)
                     if processed_img is None:
                         print(f"Debug: preprocess_image returned None for {img_path}, skipping OCR.") # Debug print
                         continue
 
-                    # Perform OCR with Japanese language
-                    print(f"Debug: Starting OCR on {img_path}...") # Debug print
-                    text = pytesseract.image_to_string(processed_img, lang='jpn')
-                    print(f"Debug: OCR completed for {img_path}. Text length: {len(text)}") # Debug print
-                    # print(f"Debug: OCR Output: \n-----\n{text}\n-----") # Print raw OCR text if needed for very detailed debug
+                    # Generate preprocessed image path
+                    preprocessed_path = img_path.replace('.png', '_preprocessed.png')
+                    
+                    # Perform OCR on the preprocessed image
+                    print(f"Debug: Starting OCR on preprocessed image {preprocessed_path}...") # Debug print
+                    
+                    # Configure Tesseract parameters for Japanese OCR
+                    custom_config = r'--oem 1 --psm 6 -l jpn'
+                    text = pytesseract.image_to_string(processed_img, config=custom_config)
+                    print(f"Debug: OCR completed for {preprocessed_path}. Text length: {len(text)}") # Debug print
 
                     # Extract relevant transaction details
-                    print(f"Debug: Extracting transaction info from OCR text for {img_path}...") # Debug print
                     sender, receiver, amount, date = extract_transaction_info(text)
 
-                    # Save results to CSV, including the raw OCR output
-                    writer.writerow([filename, img_path, sender, receiver, amount, date, text])
-                    print(f"Debug: Wrote data to CSV for {img_path}") # Debug print
-
-                    print(f"Extracted from {img_path}: Sender='{sender}', Receiver='{receiver}', Amount='{amount}', Date='{date}'") # Keep original print for user info
+                    # Save results to CSV
+                    writer.writerow([filename, img_path, preprocessed_path, sender, receiver, amount, date, text, "Tesseract"])
+                    print(f"Extracted from {img_path} (Tesseract): Sender='{sender}', Receiver='{receiver}', Amount='{amount}', Date='{date}'") # User friendly print
 
                 print(f"Debug: Finished processing PDF file: {filename}") # Debug print
         print(f"Debug: Finished processing all PDF files in input folder.") # Debug print
-    print("Transaction data extraction complete. Results saved to", output_csv) # Keep original print for user info
+    print("Transaction data extraction complete with enhanced image preprocessing. Results saved to", output_csv) # User friendly print
 
 if __name__ == "__main__":
     input_folder = "path/to/pdf_folder"  # Change to your actual folder path
-    image_output_folder = "path/to/output_images"  # Folder where images will be saved
-    output_csv = "transaction_data.csv"
+    image_output_folder = "path/to/output_images_enhanced"  # Folder where images will be saved
+    output_csv = "transaction_data_enhanced.csv"  # Changed CSV name to reflect enhanced processing
 
     print(f"Debug: Input folder: {input_folder}") # Debug print
     print(f"Debug: Image output folder: {image_output_folder}") # Debug print
     print(f"Debug: Output CSV file: {output_csv}") # Debug print
     process_documents(input_folder, image_output_folder, output_csv)
-    print("Transaction data extraction process completed.") # More explicit completion message
+    print("Transaction data extraction process completed with enhanced image preprocessing.") # More explicit completion message
