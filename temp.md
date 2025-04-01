@@ -24,7 +24,34 @@ Here are 20 multiple-choice fun fact questions related to generative AI, coverin
 
    *Answer: B) ReliaQuest.* The Tampa-based firm integrates with over 200 cybersecurity tools to provide comprehensive network visibility and threat detection. citeturn0news24
 
+What type of AI model architecture is the foundation for many popular large language models like GPT and Google's Gemini?
+A) Convolutional Neural Network (CNN)
+B) Recurrent Neural Network (RNN)
+C) Transformer
+D) Support Vector Machine (SVM)
+Answer: C) Transformer. Explanation: The Transformer architecture, introduced in 2017, uses an "attention mechanism" that allows models to weigh the importance of different words in the input, leading to significant advances in language understanding and generation. [5, 6]
 
+What is the term for AI systems designed to perform tasks autonomously or with minimal human intervention, often using LLMs to plan and execute actions?
+A) Narrow AI
+B) Artificial General Intelligence (AGI)
+C) Agentic AI (or AI Agents)
+D) Supervised Learning
+Answer: C) Agentic AI (or AI Agents). Explanation: Agentic AI refers to systems that can proactively take actions, make decisions, and carry out multi-step tasks, moving beyond simple response generation. This is a major trend expected to grow in 2025. [3, 9, 13, 16][6][7][8][9]
+
+A major challenge in integrating complex generative AI into physical humanoid robots for real-time operation is: [4, 6, 14]
+A) Ensuring the robot can tell jokes correctly.
+B) Generating r[9][10]ealistic images o[3][4][5][6][7]n its chest screen.
+C) Managing computational demands and ensuring safe, predictable physical actions (avoiding "physical hallucinations"). [1, 4, 10, 25]
+D) Translating its generated text into multiple languages simultaneously.
+Answer: C) Managing computational demands and ensuring safe, predictable physical actions (avoiding "physical hallucinations"). Explanation: Running powerful AI locally, ensuring the robot acts safely and predictably in the real world based on AI decisions, and dealing with the unpredictability of physical environments are significant hurdles compared to purely digital AI applications. [1, 4, 10, 14, 25]
+
+
+What is the primary characteristic that distinguishes an AI agent from a simpler AI model like a standard chatbot?
+A) Its ability to generate human-like text.
+B) Its capacity to access real-time news information.
+C) Its ability to autonomously plan and execute a sequence of actions towards a goal. [1, 2, 3]
+D) Its speed in performing complex mathematical calculations.
+Answer: C) Its ability to autonomously plan and execute a sequence of actions towards a goal. Explanation: While chatbots primarily respond to prompts, AI agents possess autonomy to perceive their environment (digital or physical), make decisions, and take actions over time to achieve objectives. [1, 2, 3]
 
 
    Okay, here are 20 multiple-choice fun fact questions related to Generative AI memes, covering various aspects and recent developments.
@@ -176,35 +203,3 @@ b) Dog Walker
 c) Food Critic
 d) Influencer / Person good at Googling
 Answer: d) Influencer / Person good at Googling. Description: Memes sometimes mock the perceived simplicity of prompt engineering, jokingly equating the skill to just being good at searching online or crafting social media posts, despite its actual complexities. [27, 31]
-
-Search Sources
-help
-everypixel.com
-reddit.com
-forbes.com
-medium.com
-indiatimes.com
-datasciencedojo.com
-creativebloq.com
-vizio.ai
-analyticsindiamag.com
-webopedia.com
-team-gpt.com
-thunderdungeon.com
-engati.com
-clickup.com
-byteplus.com
-youtube.com
-tiktok.com
-theaugmentedseller.com
-9gag.com
-reddit.com
-Google Search Suggestions
-Display of Search Suggestions is required when using Grounding with Google Search. Learn more
-common generative AI memes
-latest Gen AI developments memes
-memes about AI image generator fails
-ChatGPT limitations memes
-Sora AI memes
-AI prompt engineering memes
-AI hallucination memes
