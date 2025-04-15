@@ -1,114 +1,70 @@
-import os
-import re
-import json
-from typing import List, Dict, Optional
-from pydantic import BaseModel, Field
-from langchain.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.runnables import RunnablePassthrough
-from langchain_groq import ChatGroq
-from langchain.schema import HumanMessage, AIMessage
-from dotenv import load_dotenv
+from langchain_core.tools import tool
+import requests
+from bs4 import BeautifulSoup
+from typing import List, Dict
+from config import GOOGLE_SEARCH_HEADERS, MAX_SEARCH_RESULTS
 
-# Load environment variables
-load_dotenv()
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-# Initialize LLM
-llm = ChatGroq(
-    model_name="llama-3.3-70b-versatile",
-    temperature=0.7,
-    groq_api_key=GROQ_API_KEY
-)
+UPDATED_GOOGLE_NEWS_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Referer": "https://news.google.com/"
+}
 
-# ---------------------------
-# 1. Define the Structured Model
-# ---------------------------
-class MovieReview(BaseModel):
-    """
-    Structured model for capturing movie review analysis.
-    Provides a detailed framework for analyzing movie reviews.
-    """
-    movie_title: str = Field(
-        description="The exact title of the movie mentioned in the review"
-    )
-    genre: str = Field(
-        description="The genre or genres of the movie"
-    )
-    rating: float = Field(
-        description="A numerical rating between 1.0 and 10.0",
-        ge=1.0,
-        le=10.0
-    )
-    recommendation: str = Field(
-        description="Whether to recommend the movie (yes/no)",
-        pattern="^(yes|no)$"
-    )
+@tool
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers."""
+    return a * b
 
-# ---------------------------
-# 2. Initialize Components
-# ---------------------------
-movie_review_parser = JsonOutputParser(pydantic_object=MovieReview)
+@tool
+def google_news_search(query: str) -> List[Dict[str, str]]:
+    """Perform a Google News search and return a list of news results (title, link, snippet)."""
+    url = f"https://news.google.com/search?q={requests.utils.quote(query)}&hl=en-US&gl=US&ceid=US:en"
+    response = requests.get(url, headers=UPDATED_GOOGLE_NEWS_HEADERS, verify=False)
+    if response.status_code != 200:
+        return [{"error": f"Failed to fetch results: {response.status_code}"}]
+    soup = BeautifulSoup(response.text, "html.parser")
+    html_preview = response.text[:1000]
+    print("--- Google News HTML Preview (first 1000 chars) ---\n", html_preview, "\n--- END HTML Preview ---\n")
+    articles = soup.select('article')
+    print(f"Found {len(articles)} <article> blocks.")
+    for i, article in enumerate(articles[:3]):
+        print(f"--- Article {i+1} HTML ---\n{article.prettify()}\n--- END Article {i+1} ---\n")
+    results = []
+    for i, article in enumerate(articles):
+        title_elem = article.select_one('a.JtKRv')
+        publisher_elem = article.select_one('.vr1PYe')
+        author_elem = article.select_one('.bInasb span')
+        if title_elem:
+            link = title_elem['href']
+            if link.startswith('./'):
+                link = 'https://news.google.com' + link[1:]
+            results.append({
+                "title": title_elem.get_text(strip=True),
+                "link": link,
+                "publisher": publisher_elem.get_text(strip=True) if publisher_elem else "",
+                "author": author_elem.get_text(strip=True) if author_elem else ""
+            })
+        if len(results) >= MAX_SEARCH_RESULTS:
+            break
+    return results
 
-movie_review_prompt = PromptTemplate(
-    input_variables=["review"],
-    partial_variables={"format_instructions": movie_review_parser.get_format_instructions()},
-    template=(
-        "You are a movie review analyzer. Your task is to extract specific information "
-        "from the given review and format it as a JSON object.\n\n"
-        "{format_instructions}\n"
-        "Review: {review}\n"
-    )
-)
+# Let's inspect some of the attributes associated with the tool.
+print(multiply.name)
+print(multiply.description)
+print(multiply.args)
 
-# ---------------------------
-# 3. Create the Chain
-# ---------------------------
-movie_review_chain = (
-    {"review": RunnablePassthrough()} 
-    | movie_review_prompt 
-    | llm
-    | movie_review_parser
-)
+tools = [multiply, google_news_search]
+from langchain_openai import ChatOpenAI
 
-def analyze_review(review_text: str) -> MovieReview:
-    """
-    Analyze a movie review and return structured information.
-    
-    Args:
-        review_text (str): The movie review text to analyze
-        
-    Returns:
-        MovieReview: Structured information about the movie review
-    """
-    try:
-        result = movie_review_chain.invoke(review_text)
-        # Convert the dictionary to a MovieReview instance
-        return MovieReview(**result)
-    except Exception as e:
-        print(f"Error analyzing review: {str(e)}")
-        raise
+llm = ChatOpenAI(model="openai/gpt-4o-mini-2024-07-18", 
+                 base_url="https://openrouter.ai/api/v1",
+                api_key='')
+llm_with_tools = llm.bind_tools(tools)
 
-def main():
-    # Test the movie review analyzer
-    review = """
-    Just finished watching Inception. The visuals are mind-bending and the plot keeps you guessing.
-    Christopher Nolan really outdid himself with this one. The concept of dreams within dreams is fascinating.
-    """
-
-    try:
-        print("\n=== Starting Movie Review Analysis ===")
-        result = analyze_review(review)
-
-        print("\nAnalysis Results:")
-        print("-" * 40)
-        print(f"Movie Title: {result.movie_title}")
-        print(f"Genre: {result.genre}")
-        print(f"Rating: {result.rating}/10")
-        print(f"Recommendation: {result.recommendation}")
-        print("=" * 40)
-    except Exception as e:
-        print(f"\nError: {str(e)}")
-
-if __name__ == "__main__":
-    main()
+query = "What are the latest news about OpenAI?"
+result = llm_with_tools.invoke(query)
+print(result)
+print(result.tool_calls)
+print(result.content)
