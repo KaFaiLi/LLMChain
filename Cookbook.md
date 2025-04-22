@@ -596,3 +596,125 @@ Based on the provided risk incident data, here are the steps to create meaningfu
    - Provide context for key findings
 
 Would you like me to explain any of these visualizations in more detail or provide additional recommendations for your audit support dashboard?
+
+
+
+
+
+
+
+
+Below is a detailed, step‑by‑step guide to build a Power BI report that helps your auditors quickly understand last year’s risk incidents. We’ll cover everything from data ingestion and transformation, through model design and DAX calculations, to the creation of interactive visuals and final polishing.
+
+⸻
+
+1. Connect & Import the Data
+	1.	Open Power BI Desktop
+	2.	Get Data > Text/CSV (or Excel, SQL, as appropriate) and select your risk‑incident file.
+	3.	In the Preview window, verify that Power BI has correctly detected:
+	•	Date fields (RISK_EVENT_REFERENCE_DATE, …_OCCURRENCE_DATE, etc.)
+	•	Numeric fields (…_TOTAL_LOSS_GROSS_AMOUNT, etc.)
+	4.	Click Transform Data to enter Power Query for cleaning and shaping.
+
+⸻
+
+2. Transform & Shape in Power Query
+	1.	Change Data Types
+	•	Set all date columns to Date.
+	•	Set loss‑amount columns to Decimal Number.
+	•	Status and categorical codes to Text.
+	2.	Filter Rows
+	•	If you only want “last year” (e.g. 2024), filter RISK_EVENT_OCCURRENCE_DATE between 01/01/2024 and 12/31/2024.
+	3.	Handle Missing Values
+	•	Replace nulls in numeric loss amounts with 0 (Right‑click > Replace Values).
+	•	For text fields like RISKEVENTTITLE, replace nulls with “(Unspecified)”.
+	4.	Split or Extract
+	•	If you need Year/Month out of a date, add a Date > Year and Date > Month columns from your occurrence date.
+	5.	Rename Columns
+	•	For clarity in the model, rename long column names to shorter aliases (e.g., Loss_Gross, Loss_Net, Status, Confidentiality).
+	6.	Click Close & Apply.
+
+⸻
+
+3. Build the Data Model
+	1.	In the Model view, confirm there is a single table of incidents (no relationships needed if this is your only table).
+	2.	If you later bring in reference tables (e.g. process codes → process names), create relationships on key columns like RISK_EVENT_MAIN_PROCESS_CODE.
+
+⸻
+
+4. Create Key DAX Measures
+
+In the Report view, under your incident table, right‑click New measure and add:
+
+Total Incidents = COUNTROWS('Incidents')
+
+Total Loss Gross = SUM('Incidents'[Loss_Gross])
+Total Loss Net   = SUM('Incidents'[Loss_Net])
+Total Loss Final = SUM('Incidents'[Loss_Final])
+
+Avg Loss per Incident =
+    DIVIDE([Total Loss Final], [Total Incidents], 0)
+
+Optionally, measures for counts by status:
+
+Open Incidents = CALCULATE([Total Incidents],
+    'Incidents'[Status] = "Open")
+
+
+
+⸻
+
+5. Design Your Report Pages
+
+Page 1: Executive Summary
+	1.	Card visuals for
+	•	Total Incidents
+	•	Total Loss Final
+	•	Avg Loss per Incident
+	2.	Donut chart of Incident Count by Status.
+	3.	Bar chart of Loss Final by Confidentiality level.
+	4.	Slicer for Confidentiality and date (Year/Month).
+
+Page 2: Trend Analysis
+	1.	Line chart showing monthly Total Incidents (use the Year‑Month column on the axis).
+	2.	Area chart of cumulative Loss Final over time.
+
+Page 3: Process & Impact
+	1.	Clustered bar chart: Number of incidents by Macro_Process_Code (or by Main_Process_Code).
+	2.	Stacked bar: Loss Final by Impact_Type within each Macro Process.
+	3.	Table or Matrix with details:
+	•	RISK_EVENT_ID
+	•	RISKEVENTTITLE
+	•	Status, Loss_Final, Occurrence_Date
+
+⸻
+
+6. Add Interactivity & Drill‑Through
+	1.	Enable Drill‑Down on charts by adding hierarchy (e.g. Year → Month → Day).
+	2.	Drill‑through page: Right‑click on any incident in a table & drill through to a detail page that shows full description (RISKEVENTDESCRIPTION), action plan, timestamps.
+
+⸻
+
+7. Formatting & UX
+	1.	Consistent color palette aligned to audit/audit‑brand (or use default theme).
+	2.	Data labels on key bars/lines for clarity.
+	3.	Tooltips: Customize to show additional fields like Service_Provider, Discovery_Date, etc.
+	4.	Page Navigation Buttons: At bottom, add “Back to Summary” / “Next” buttons for the auditor’s workflow.
+
+⸻
+
+8. Validate & Publish
+	1.	Review filters and interactions: ensure slicers cross‑filter appropriately.
+	2.	Optimize performance: disable unnecessary visuals on load.
+	3.	Publish to Power BI Service or export to PDF/PPT:
+	•	For Power BI Service, assign appropriate roles and share with auditors.
+	•	For PDF, use File > Export to PDF ensuring each page is legible.
+
+⸻
+
+Tips for Audit‑Ready Reporting
+	•	Audit Trail: Include a “Last Refreshed” date textbox on every page.
+	•	Annotations: Use text boxes to highlight key findings (e.g. “80% of losses occurred in Macro Process A”).
+	•	Data Security: Apply row‑level security if confidentiality requires certain users to see only certain incidents.
+
+By following these steps, your Power BI report will give auditors a clear, interactive view of risk incidents—helping them to slice, drill, and validate every aspect of your last‑year data.
